@@ -16,7 +16,7 @@ class BlindBet:
             HandType.HIGH_CARD: 0.0,
             HandType.PAIR: 0.0,
             HandType.TWO_PAIR: 0.0,
-            HandType.THREE_OF_A_KIND: 4.0,
+            HandType.THREE_OF_A_KIND: 0.0,
             HandType.STRAIGHT: 1.0,
             HandType.FLUSH: 1.5,
             HandType.FULL_HOUSE: 3.0,

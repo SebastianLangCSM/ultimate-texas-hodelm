@@ -7,5 +7,11 @@ class Bet:
         # blind matches ante
         self.blind = self.ante
 
+        # trips bet
+        if self.ante > 0:
+            self.trips = self.ante
+        else:
+            self.trips = 0
+
         # play bet initial zero
         self.play = 0
