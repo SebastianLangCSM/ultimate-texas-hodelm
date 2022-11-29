@@ -9,11 +9,12 @@ from hand import HandType
 from BlindBetTable import BlindBet
 from TripsBetTable import TripsBet
 
+
 class Game:
-    def __init__(self, stdout):
+    def __init__(self, bet_size, stdout):
         self._deck = Deck(1)
         self._deck.shuffle()
-        self._bet = Bet(1.0)
+        self._bet = Bet(bet_size)
         self._dealer = []
         self._player = []
         self._community = []
@@ -23,7 +24,7 @@ class Game:
     def startRound1(self):
         self._player += self._deck.draw(2)
         self._dealer += self._deck.draw(2)
-        self._bet.play = strategy.round1Bet(self._player)  # 0 or 4
+        self._bet.play = strategy.round1Bet(self._player) * self._bet.ante  # 0 or 4
         if self.stdout:
             print("***************************")
             print("Round1: ")
@@ -35,7 +36,7 @@ class Game:
     def startRound2(self):
         self._community += self._deck.draw(3)
         if self._bet.play == 0:
-            self._bet.play = strategy.round2Bet(self._player, self._community)
+            self._bet.play = strategy.round2Bet(self._player, self._community) * self._bet.ante
         if self.stdout:
             print("\nRound2: ")
             print("Dealer: " + ", ".join([str(c) for c in self._dealer]))
@@ -46,8 +47,12 @@ class Game:
 
     def startRound3(self):
         self._community += self._deck.draw(2)
-        self._playerHand = Hand(self._player+self._community)
-        self._dealerHand = Hand(self._dealer+self._community)
+
+        if self._bet.play == 0:
+            self._bet.play = strategy.round3Bet(self._player, self._community) * self._bet.ante
+
+        self._playerHand = Hand(self._player + self._community)
+        self._dealerHand = Hand(self._dealer + self._community)
 
         if self.stdout:
             print("\nRound3: ")
@@ -76,7 +81,6 @@ class Game:
             if self.stdout:
                 print("Player Fold!")
 
-
     def gainFromWin(self):
         res = self._bet.play + BlindBet.Table[self._playerHand.type] * self._bet.blind
         res += self._bet.ante if self._dealerHand.type >= HandType.PAIR else 0
@@ -88,15 +92,15 @@ class Game:
         return res
 
     def gainFromLose(self):
-         res = 0 - self._bet.play - self._bet.blind
-         res -= self._bet.ante if self._dealerHand.type >= HandType.PAIR else 0
+        res = 0 - self._bet.play - self._bet.blind
+        res -= self._bet.ante if self._dealerHand.type >= HandType.PAIR else 0
 
-         if self._playerHand.type >= HandType.THREE_OF_A_KIND:
-             res += self._bet.trips * TripsBet.Table[self._playerHand.type]
-         else:
-             res -= self._bet.trips
+        if self._playerHand.type >= HandType.THREE_OF_A_KIND:
+            res += self._bet.trips * TripsBet.Table[self._playerHand.type]
+        else:
+            res -= self._bet.trips
 
-         return res
+        return res
 
     def playGame(self):
         self.startRound1()
@@ -105,7 +109,8 @@ class Game:
         if self.stdout:
             print("\n==GAIN THIS ROUND==")
             print("\t", self._gain)
-        return self._gain, (self._bet.blind + self._bet.ante + self._bet.play)
+        return self._gain, (self._bet.blind + self._bet.ante + self._bet.play + self._bet.trips)
+
 
 if __name__ == '__main__':
     game = Game()
